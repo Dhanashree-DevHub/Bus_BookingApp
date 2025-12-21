@@ -17,6 +17,10 @@ env/
 ENV/
 .venv
 .env/
+.env
+.env.local
+*.env
+!.env.example
 
 # Django
 *.log
@@ -60,6 +64,9 @@ htmlcov/
 nosetests.xml
 coverage.xml
 *.cover
+
+#helper script
+run_local.bat
 
 # Distribution / packaging
 .Python

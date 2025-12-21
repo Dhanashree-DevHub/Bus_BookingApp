@@ -3,33 +3,40 @@ version: '3.8'
 services:
   db:
     image: postgres:15
+    container_name: bus_booking_db
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
-      - POSTGRES_DB=${DB_NAME}
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "5432:5432"
+      - "5433:5432"  # Use 5433 to avoid conflict with local PostgreSQL
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - bus_booking_network
 
   redis:
     image: redis:7-alpine
+    container_name: bus_booking_redis
     ports:
-      - "6379:6379"
+      - "6380:6379"  # Use 6380 to avoid conflict with local Redis
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - bus_booking_network
 
   web:
     build: .
-    command: python manage.py runserver 0.0.0.0:8000
+    container_name: bus_booking_web
+    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
     volumes:
       - .:/app
     ports:
@@ -41,12 +48,12 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    environment:
-      - DB_HOST=db
-      - REDIS_URL=redis://redis:6379/0
+    networks:
+      - bus_booking_network
 
   celery:
     build: .
+    container_name: bus_booking_celery
     command: celery -A bus_booking worker --loglevel=info
     volumes:
       - .:/app
@@ -56,9 +63,12 @@ services:
       - db
       - redis
       - web
-    environment:
-      - DB_HOST=db
-      - REDIS_URL=redis://redis:6379/0
+    networks:
+      - bus_booking_network
 
 volumes:
   postgres_data:
+
+networks:
+  bus_booking_network:
+    driver: bridge
