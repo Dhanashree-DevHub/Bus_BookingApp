@@ -1,0 +1,43 @@
+{% extends 'booking/base.html' %}
+
+{% block content %}
+<div class="card">
+    <h2>My Bookings</h2>
+    {% if bookings %}
+    <table>
+        <thead>
+            <tr>
+                <th>Bus</th>
+                <th>Route</th>
+                <th>Date</th>
+                <th>Seats</th>
+                <th>Passenger</th>
+                <th>Total Price</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for booking in bookings %}
+            <tr>
+                <td>{{ booking.bus.bus_name }}</td>
+                <td>{{ booking.bus.source }} → {{ booking.bus.destination }}</td>
+                <td>{{ booking.booking_date }}</td>
+                <td>{{ booking.seats_booked }}</td>
+                <td>{{ booking.passenger_name }}</td>
+                <td>₹{{ booking.total_price }}</td>
+                <td>
+                    <form method="POST" action="{% url 'cancel_booking' booking.id %}" 
+                          onsubmit="return confirm('Are you sure?')" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger" style="padding: 0.5rem 1rem;">Cancel</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No bookings found. <a href="{% url 'home' %}">Book a bus now</a></p>
+    {% endif %}
+</div>
+{% endblock %}

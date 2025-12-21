@@ -1,0 +1,71 @@
+{% extends 'booking/base.html' %}
+
+{% block content %}
+<div class="card" style="max-width: 700px; margin: 2rem auto; text-align: center;">
+    <div style="font-size: 4rem; color: #16a34a; margin-bottom: 1rem;">✓</div>
+    <h2 style="color: #16a34a; margin-bottom: 1rem;">Booking Confirmed!</h2>
+    <p style="font-size: 1.1rem; margin-bottom: 2rem;">
+        Your payment was successful. A confirmation email has been sent to <strong>{{ booking.passenger_email }}</strong>
+    </p>
+    
+    <div style="background: #f3f4f6; padding: 2rem; border-radius: 8px; text-align: left; margin: 2rem 0;">
+        <h3 style="margin-bottom: 1rem;">Ticket Details</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div>
+                <p><strong>Booking Reference:</strong></p>
+                <p style="font-size: 1.5rem; color: #2563eb;">{{ booking.booking_reference }}</p>
+            </div>
+            <div>
+                <p><strong>Payment Status:</strong></p>
+                <p><span class="badge badge-success">{{ booking.payment_status|upper }}</span></p>
+            </div>
+        </div>
+        
+        <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid #ddd;">
+        
+        <div style="margin-bottom: 1rem;">
+            <h4>Journey Details</h4>
+            <p><strong>Bus:</strong> {{ booking.bus.bus_name }} ({{ booking.bus.bus_number }})</p>
+            <p><strong>Route:</strong> {{ booking.bus.source }} → {{ booking.bus.destination }}</p>
+            <p><strong>Journey Date:</strong> {{ booking.booking_date|date:"d F Y" }}</p>
+            <p><strong>Departure Time:</strong> {{ booking.bus.departure_time|time:"h:i A" }}</p>
+            <p><strong>Expected Arrival:</strong> {{ booking.bus.arrival_time|time:"h:i A" }}</p>
+            <p><strong>Journey Duration:</strong> {{ booking.bus.journey_duration }}</p>
+        </div>
+        
+        <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid #ddd;">
+        
+        <div style="margin-bottom: 1rem;">
+            <h4>Passenger Information</h4>
+            <p><strong>Name:</strong> {{ booking.passenger_name }}</p>
+            <p><strong>Email:</strong> {{ booking.passenger_email }}</p>
+            <p><strong>Phone:</strong> {{ booking.passenger_phone }}</p>
+            <p><strong>Seats:</strong> {{ booking.seats_booked }}</p>
+        </div>
+        
+        <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid #ddd;">
+        
+        <div>
+            <h4>Payment Information</h4>
+            <p><strong>Amount Paid:</strong> ₹{{ booking.total_price }}</p>
+            <p><strong>Payment ID:</strong> {{ booking.payment_id }}</p>
+            <p><strong>Payment Method:</strong> {{ booking.payment_method }}</p>
+        </div>
+    </div>
+    
+    <div style="background: #fef3c7; padding: 1rem; border-radius: 8px; margin: 2rem 0; text-align: left;">
+        <h4 style="margin-bottom: 0.5rem;">📋 Important Instructions:</h4>
+        <ul style="margin-left: 1.5rem;">
+            <li>Please carry a valid ID proof while boarding</li>
+            <li>Reach the boarding point 15 minutes before departure</li>
+            <li>Keep your booking reference handy</li>
+            <li>Check your email for detailed ticket information</li>
+        </ul>
+    </div>
+    
+    <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem;">
+        <a href="{% url 'my_bookings' %}" class="btn btn-primary">View My Bookings</a>
+        <a href="{% url 'home' %}" class="btn" style="background: #6b7280; color: white;">Book Another</a>
+    </div>
+</div>
+{% endblock %}

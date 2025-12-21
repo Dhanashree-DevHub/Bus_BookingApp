@@ -1,0 +1,39 @@
+{% extends 'booking/base.html' %}
+
+{% block content %}
+<div class="card">
+    <h2>Search Results</h2>
+    <p><strong>Date:</strong> {{ date }}</p>
+    {% if source %}<p><strong>From:</strong> {{ source }}</p>{% endif %}
+    {% if destination %}<p><strong>To:</strong> {{ destination }}</p>{% endif %}
+</div>
+
+{% if results %}
+<div class="grid">
+    {% for item in results %}
+    <div class="card">
+        <h3>{{ item.bus.bus_name }}</h3>
+        <p><strong>Bus No:</strong> {{ item.bus.bus_number }}</p>
+        <p><strong>Route:</strong> {{ item.bus.source }} → {{ item.bus.destination }}</p>
+        <p><strong>Departure:</strong> {{ item.bus.departure_time|time:"h:i A" }}</p>
+        <p><strong>Arrival:</strong> {{ item.bus.arrival_time|time:"h:i A" }}</p>
+        <p><strong>Duration:</strong> {{ item.bus.journey_duration }}</p>
+        <p><strong>Available Seats:</strong> {{ item.available_seats }}/{{ item.bus.total_seats }}</p>
+        <p><strong>Price:</strong> ₹{{ item.bus.price }}</p>
+        {% if item.available_seats > 0 %}
+        <a href="{% url 'book_bus' item.bus.id %}?date={{ date }}" class="btn btn-success" 
+           style="display: inline-block; text-decoration: none; margin-top: 0.5rem;">Book Now</a>
+        {% else %}
+        <button class="btn" disabled style="background: #ccc;">Sold Out</button>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card">
+    <p>No buses found. Try different search criteria.</p>
+</div>
+{% endif %}
+
+<a href="{% url 'home' %}" style="display: inline-block; margin-top: 1rem;">← Back to Home</a>
+{% endblock %}

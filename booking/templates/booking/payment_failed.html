@@ -1,0 +1,26 @@
+{% extends 'booking/base.html' %}
+
+{% block content %}
+<div class="card" style="max-width: 600px; margin: 3rem auto; text-align: center;">
+    <div style="font-size: 4rem; color: #dc2626; margin-bottom: 1rem;">✗</div>
+    <h2 style="color: #dc2626; margin-bottom: 1rem;">Payment Failed</h2>
+    <p style="font-size: 1.1rem; margin-bottom: 2rem;">
+        We couldn't process your payment. Please try again or use a different payment method.
+    </p>
+    
+    <div style="background: #fee2e2; padding: 1.5rem; border-radius: 8px; margin: 2rem 0; text-align: left;">
+        <h4>Common reasons for payment failure:</h4>
+        <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+            <li>Insufficient funds in your account</li>
+            <li>Incorrect card details</li>
+            <li>Bank server issues</li>
+            <li>Payment timeout</li>
+        </ul>
+    </div>
+    
+    <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem;">
+        <a href="{% url 'home' %}" class="btn btn-primary">Try Again</a>
+        <a href="{% url 'my_bookings' %}" class="btn" style="background: #6b7280; color: white;">View Bookings</a>
+    </div>
+</div>
+{% endblock %}

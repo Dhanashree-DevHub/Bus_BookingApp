@@ -1,0 +1,69 @@
+{% extends 'booking/base.html' %}
+
+{% block content %}
+<div class="card" style="max-width: 600px; margin: 0 auto;">
+    <h2>Payment</h2>
+    
+    <div style="background: #f3f4f6; padding: 1.5rem; border-radius: 8px; margin: 1.5rem 0;">
+        <h3>Booking Summary</h3>
+        <div style="margin-top: 1rem;">
+            <p><strong>Booking Reference:</strong> {{ booking.booking_reference }}</p>
+            <p><strong>Bus:</strong> {{ booking.bus.bus_name }} ({{ booking.bus.bus_number }})</p>
+            <p><strong>Route:</strong> {{ booking.bus.source }} → {{ booking.bus.destination }}</p>
+            <p><strong>Journey Date:</strong> {{ booking.booking_date }}</p>
+            <p><strong>Departure:</strong> {{ booking.bus.departure_time }}</p>
+            <p><strong>Arrival:</strong> {{ booking.bus.arrival_time }}</p>
+            <p><strong>Duration:</strong> {{ booking.bus.journey_duration }}</p>
+            <p><strong>Passenger:</strong> {{ booking.passenger_name }}</p>
+            <p><strong>Seats:</strong> {{ booking.seats_booked }}</p>
+            <p style="font-size: 1.5rem; color: #2563eb; margin-top: 1rem;">
+                <strong>Total Amount: ₹{{ booking.total_price }}</strong>
+            </p>
+        </div>
+    </div>
+    
+    <button id="rzp-button" class="btn btn-success" style="width: 100%; font-size: 1.1rem;">
+        Proceed to Pay ₹{{ booking.total_price }}
+    </button>
+</div>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+    var options = {
+        "key": "{{ razorpay_key_id }}",
+        "amount": "{{ amount }}",
+        "currency": "INR",
+        "name": "Bus Booking System",
+        "description": "Booking for {{ booking.bus.bus_name }}",
+        "order_id": "{{ razorpay_order_id }}",
+        "handler": function (response) {
+            document.getElementById('razorpay_payment_id').value = response.razorpay_payment_id;
+            document.getElementById('razorpay_order_id').value = response.razorpay_order_id;
+            document.getElementById('razorpay_signature').value = response.razorpay_signature;
+            document.getElementById('payment-form').submit();
+        },
+        "prefill": {
+            "name": "{{ booking.passenger_name }}",
+            "email": "{{ booking.passenger_email }}",
+            "contact": "{{ booking.passenger_phone }}"
+        },
+        "theme": {
+            "color": "#2563eb"
+        }
+    };
+    
+    var rzp = new Razorpay(options);
+    
+    document.getElementById('rzp-button').onclick = function(e) {
+        rzp.open();
+        e.preventDefault();
+    }
+</script>
+
+<form id="payment-form" method="POST" action="{% url 'payment_success' %}" style="display: none;">
+    {% csrf_token %}
+    <input type="hidden" name="razorpay_payment_id" id="razorpay_payment_id">
+    <input type="hidden" name="razorpay_order_id" id="razorpay_order_id">
+    <input type="hidden" name="razorpay_signature" id="razorpay_signature">
+</form>
+{% endblock %}
