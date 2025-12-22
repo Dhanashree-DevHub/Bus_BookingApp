@@ -9,7 +9,6 @@ from django.http import JsonResponse
 from datetime import datetime
 import razorpay
 import json
-
 from .models import Bus, Booking
 from .forms import SignUpForm, BookingForm
 from .tasks import send_booking_confirmation_email
@@ -132,6 +131,45 @@ def book_bus(request, bus_id):
         'date': date_str,
         'available_seats': available_seats
     })
+    
+@login_required
+def booking_review(request, booking_id):
+    booking = get_object_or_404(Booking, id=booking_id, user=request.user)
+    
+    if booking.payment_status != 'pending':
+        messages.info(request, 'booking cannot be modified')
+        return redirect('my_bookings')
+    
+    booked = Booking.objects.filter(bus=booking.bus, booking_date=booking.booking_date, payment_status__in=['pending','completed']).exclude(id=booking.id).aggregate(total=Sum('seats_booked'))['total'] or 0
+    available_seats = booking.bus.total_seats - booked
+    
+    return render(request, 'booking/booking_review.html', {'booking': booking, 'available_seats': available_seats})
+
+@login_required
+def modify_booking(request, booking_id):
+    booking = get_object_or_404(Booking, id=booking_id, user=request.user)
+    if not booking.can_modify():
+        messages.error(request, 'booking cannot be modified')
+        return redirect('my_bookings')
+    
+    booked = Booking.objects.filter(bus=booking.bus, booking_date=booking.booking_date, payment_status__in=['pending','completed']).exclude(id=booking_id).aggregate(total=Sum('seats_booked'))['total'] or 0
+    available_seats = booking.bus.total_seats - booked
+    
+    if request.method == 'POST':
+        form = BookingForm(request.POST, instance=booking)
+        if form.is_valid():
+            seats = form.cleaned_data['seats_booked']
+            if seats > available_seats + booking.seats_booked:
+                messages.error(request, f'only {available_seats + booking.seats_booked} seats are available')
+            else:
+                booking = form.save(commit=False)
+                booking.total_price = booking.bus.price * seats
+                booking.save()
+                messages.success(request, 'booking updated successfully')
+                return redirect('booking_review', booking_id=booking.id)
+    else:
+        form = BookingForm(instance=booking)
+    return render(request, 'booking/modify_booking.html', {'booking': booking,'form': form, 'available_seats': available_seats + booking.seats_booked})
 
 @login_required
 def payment_view(request, booking_id):

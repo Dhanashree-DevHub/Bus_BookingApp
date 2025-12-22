@@ -7,30 +7,48 @@
     <table>
         <thead>
             <tr>
+                <th>Reference</th>
                 <th>Bus</th>
                 <th>Route</th>
                 <th>Date</th>
                 <th>Seats</th>
-                <th>Passenger</th>
-                <th>Total Price</th>
+                <th>Amount</th>
+                <th>Status</th>
                 <th>Action</th>
             </tr>
         </thead>
         <tbody>
             {% for booking in bookings %}
             <tr>
+                <td><strong>{{ booking.booking_reference }}</strong></td>
                 <td>{{ booking.bus.bus_name }}</td>
                 <td>{{ booking.bus.source }} → {{ booking.bus.destination }}</td>
-                <td>{{ booking.booking_date }}</td>
+                <td>{{ booking.booking_date|date:"d M Y" }}</td>
                 <td>{{ booking.seats_booked }}</td>
-                <td>{{ booking.passenger_name }}</td>
                 <td>₹{{ booking.total_price }}</td>
                 <td>
-                    <form method="POST" action="{% url 'cancel_booking' booking.id %}" 
-                          onsubmit="return confirm('Are you sure?')" style="display: inline;">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-danger" style="padding: 0.5rem 1rem;">Cancel</button>
-                    </form>
+                    {% if booking.payment_status == 'completed' %}
+                        <span class="badge badge-success">Confirmed</span>
+                    {% elif booking.payment_status == 'pending' %}
+                        <span class="badge badge-warning">Pending Payment</span>
+                    {% elif booking.payment_status == 'failed' %}
+                        <span class="badge badge-danger">Failed</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if booking.payment_status == 'pending' %}
+                        <a href="{% url 'booking_review' booking.id %}" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.875rem; text-decoration: none;">
+                            Review
+                        </a>
+                    {% elif booking.payment_status == 'completed' %}
+                        <form method="POST" action="{% url 'cancel_booking' booking.id %}" 
+                              onsubmit="return confirm('Request cancellation? Refund takes 5-7 days.')" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                                Cancel
+                            </button>
+                        </form>
+                    {% endif %}
                 </td>
             </tr>
             {% endfor %}
@@ -40,4 +58,9 @@
     <p>No bookings found. <a href="{% url 'home' %}">Book a bus now</a></p>
     {% endif %}
 </div>
+
+<style>
+    table { margin-top: 1rem; }
+    table td, table th { font-size: 0.9rem; }
+</style>
 {% endblock %}

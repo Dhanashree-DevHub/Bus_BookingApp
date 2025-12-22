@@ -25,6 +25,7 @@ class Booking(models.Model):
         ('pending', 'Pending'),
         ('completed', 'Completed'),
         ('failed', 'Failed'),
+        ('cancelled', 'Canceled')
     ]
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     bus = models.ForeignKey(Bus, on_delete=models.CASCADE)
@@ -40,6 +41,7 @@ class Booking(models.Model):
     order_id = models.CharField(max_length=200, blank=True, null=True)
     payment_method = models.CharField(max_length=50, blank=True, null=True)
     booking_reference = models.CharField(max_length=20, unique=True)
+    modified_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.booking_reference} - {self.user.username}"
@@ -51,6 +53,9 @@ class Booking(models.Model):
             payment_status='completed'
         ).aggregate(total=models.Sum('seats_booked'))['total'] or 0
         return bus.total_seats - booked
+    
+    def can_modify(self):
+        return self.payment_status == 'pending'
     
     def save(self, *args, **kwargs):
         if not self.booking_reference:

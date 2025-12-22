@@ -1,0 +1,60 @@
+{% extends 'booking/base.html' %}
+
+{% block content %}
+<div class="card" style="max-width: 800px; margin: 2rem auto;">
+    <h2>Review your Booking</h2>
+    <p style="color: #666; margin-bottom: 2rem;">Review your booking details before proceeding to payment</p>
+
+    <div style="background: #f3f4f6; padding: 2rem; border-radius: 8px; margin-bottom: 2rem;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+            <div>
+                <h3 style="margin-bottom: 1rem;">Journey Details</h3>
+                <p><strong>Booking Reference:</strong> {{ booking.booking_reference }}</p>
+                <p><strong>Bus:</strong> {{ booking.bus.bus_name }} ({{ booking.bus.bus_number }})</p>
+                <p><strong>Route:</strong> {{ booking.bus.source }} → {{ booking.bus.destination }}</p>
+                <p><strong>Date:</strong> {{ booking.booking_date|date:"d F Y" }}</p>
+                <p><strong>Departure:</strong> {{ booking.bus.departure_time|time:"h:i A" }}</p>
+                <p><strong>Arrival:</strong> {{ booking.bus.arrival_time|time:"h:i A" }}</p>
+                <p><strong>Duration:</strong> {{ booking.bus.journey_duration }}</p>
+            </div>
+            
+            <div>
+                <h3 style="margin-bottom: 1rem;">Passenger Details</h3>
+                <p><strong>Name:</strong> {{ booking.passenger_name }}</p>
+                <p><strong>Email:</strong> {{ booking.passenger_email }}</p>
+                <p><strong>Phone:</strong> {{ booking.passenger_phone }}</p>
+                <p><strong>Seats:</strong> {{ booking.seats_booked }}</p>
+                <p><strong>Price per Seat:</strong> ₹{{ booking.bus.price }}</p>
+                <p style="font-size: 1.3rem; color: #2563eb; margin-top: 1rem;">
+                    <strong>Total: ₹{{ booking.total_price }}</strong>
+                </p>
+            </div>
+        </div>
+    </div>
+
+     <div style="background: #fef3c7; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+        <h4>ℹImportant Information</h4>
+        <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+            <li>You can modify or cancel this booking before making payment</li>
+            <li>After payment, cancellation will require refund processing</li>
+            <li>Available seats: {{ available_seats }} (excluding your booking)</li>
+        </ul>
+    </div>
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <a href="{% url 'payment' booking.id %}" class="btn btn-success" style="flex: 1; text-align: center; text-decoration: none;">
+            Proceed to Payment
+        </a>
+        <a href="{% url 'modify_booking' booking.id %}" class="btn btn-primary" style="flex: 1; text-align: center; text-decoration: none;">
+            Modify Booking
+        </a>
+        <a href="{% url 'cancel_booking_pending' booking.id %}" class="btn btn-danger" style="flex: 1; text-align: center; text-decoration: none;">
+            Cancel Booking
+        </a>
+    </div>
+    <div style="margin-top: 1.5rem; text-align: center;">
+        <a href="{% url 'search_buses' %}?date={{ booking.booking_date|date:'Y-m-d' }}" style="color: #2563eb;">
+            ← Back to Search Results
+        </a>
+    </div>
+</div>
+{% endblock %}
