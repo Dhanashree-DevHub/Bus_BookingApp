@@ -57,6 +57,94 @@ class BookingModelTest(BaseTestcase):
         self.assertEqual(self.booking.seats_booked, 2)
         self.assertIsNotNone(self.booking.booking_reference)
         self.assertEqual(self.booking.total_price, Decimal('2400.00'))
+        
+#Testcases: Views
+
+class LoginViewTest(BaseTestcase):
+    def test_login_success(self):
+        response = self.client.post(reverse('login'),{
+            'username':'testuser',
+            'pasword':'testpass123'
+        })
+        self.assertEqual(response.status_code, 200)
+        
+class SignupViewTest(BaseTestcase):
+    def setUp(self):
+        self.client=Client()
+    def tearDown(self):
+        User.objects.all().delete()
+        
+    def test_signup(self):
+        response = self.client.post(reverse('signup'),{
+            'username': 'newuser',
+            'email': 'new@example.com',
+            'password1': 'newpass123',
+            'password2': 'newpass123'
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(User.objects.filter(username='newuser').exists())
+        
+class HomeViewTest(BaseTestcase):
+    def test_home(self):
+        self.client.login(username='testuser',password='testpass123')
+        response=self.client.get(reverse('home'))
+        self.assertEqual(response.status_code,200)
+        self.assertContains(response, 'Test Express')
+        
+class SearchBusesViewTest(BaseTestcase):
+    def test_search_buses(self):
+        self.client.login(username='testuser',password='testpass123')
+        response = self.client.get(reverse('search_buses'),{
+            'source': 'Delhi',
+            'date':'2025-01-15'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Test Express')
+        
+class BookBusViewTest(BaseTestcase):
+    def test_create_booking(self):
+        self.client.login(username='testuser', password='testpass123')
+        Booking.objects.all().delete()
+        response = self.client.post(reverse('book_bus', kwargs={'bus_id': self.bus.id}) + '?date=2025-01-15',{
+            'seats_booked': 2,
+                'passenger_name': 'New User',
+                'passenger_email': 'new@example.com',
+                'passenger_phone': '+91-9876543210'
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(Booking.objects.filter(passenger_name='New User').exists())
+
+class ModifyBookingViewTest(BaseTestcase):
+    def test_modify_booking(self):
+        self.client.login(username='testuser', password='testpass123')
+        
+        response = self.client.post(
+            reverse('modify_booking', kwargs={'booking_id': self.booking.id}),
+            {
+                'seats_booked': 3,
+                'passenger_name': 'Updated Name',
+                'passenger_email': 'test@example.com',
+                'passenger_phone': '+91-9876543210'
+            }
+        )
+        
+        self.assertEqual(response.status_code, 302)
+        self.booking.refresh_from_db()
+        self.assertEqual(self.booking.seats_booked, 3)
+        self.assertEqual(self.booking.passenger_name, 'Updated Name')
+
+class CancelBookingViewTest(BaseTestcase):
+    def test_cancel_booking(self):
+        self.client.login(username='testuser', password='testpass123')
+        
+        response = self.client.post(
+            reverse('cancel_booking', kwargs={'booking_id': self.booking.id})
+        )
+        
+        self.assertEqual(response.status_code, 302)
+        self.booking.refresh_from_db()
+        self.assertEqual(self.booking.payment_status, 'cancelled')
+
 
 # #Testcases for Bus and Booking Models
 # class BusModelTest(TestCase):
