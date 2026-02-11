@@ -112,7 +112,7 @@ def booking_detail(request, pk):
         return Response({'error': 'Booking not found'}, status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['PUT'])
-@permission_classes(['IsAuthenticated'])
+@permission_classes([IsAuthenticated])
 def modify_booking(request, pk):
     try:
         booking = Booking.objects.get(pk=pk, user=request.user)
