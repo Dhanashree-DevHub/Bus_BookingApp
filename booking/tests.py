@@ -133,19 +133,94 @@ class ModifyBookingViewTest(BaseTestcase):
         self.assertEqual(self.booking.seats_booked, 3)
         self.assertEqual(self.booking.passenger_name, 'Updated Name')
 
-class CancelBookingViewTest(BaseTestcase):
-    def test_cancel_booking(self):
-        self.client.login(username='testuser', password='testpass123')
+#Testcases for API views
+class APITest(TestCase):
+    def setUp(self):
+        self.api_client = APIClient()
+    def tearDown(self):
+        User.objects.all().delete()
         
-        response = self.client.post(
-            reverse('cancel_booking', kwargs={'booking_id': self.booking.id})
+    def test_register_user(self):
+        response = self.api_client.post(reverse('api_register'),{
+            'username': 'apiuser',
+            'email': 'api@example.com',
+            'password': 'apipass123'
+        }, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIn('access', response.data)
+        self.assertTrue(User.objects.filter(username='apiuser').exists())
+        
+class APIBusListTest(BaseTestcase):
+    def test_get_bus(self):
+        response = self.api_client.post(reverse('api_login'), {
+            'username': 'testuser',
+            'password': 'testpass123'
+        })
+
+        access_token = response.data['access']
+
+        # Set JWT header
+        self.api_client.credentials(
+            HTTP_AUTHORIZATION='Bearer ' + access_token
+        )
+        response = self.api_client.get(reverse('api_bus_list'))
+        print(response.data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['results'][0]['bus_name'],'Test Express')
+
+class APIBusDetailTest(BaseTestcase):
+    def test_bus_details(self):
+        response = self.api_client.get(reverse('api_bus_detail'),
+                                       
+                                       kwargs={'bus_id': self.bus.id})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+class APICreateBookingTest(BaseTestcase):
+    def test_create_booking(self):
+        self.api_client.force_authenticate(user=self.user)
+        Booking.objects.all().delete()
+        response = self.api_client.post(reverse('api_create_booking'), {
+            'bus': self.bus.id,
+            'booking_date': '2025-01-15',
+            'seats_booked': 2,
+            'passenger_name': 'API User',
+            'passenger_email': 'api@example.com',
+            'passenger_phone': '+91-9876543210'
+        }, format='json')
+        
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        
+class APIMyBookingsTest(BaseTestcase):
+    def test_get_my_bookings(self):
+        self.api_client.force_authenticate(user=self.user)
+        response = self.api_client.get(reverse('api_my_bookings'))
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 1)
+        
+class APIModifyBookingTest(BaseTestcase):
+    def test_modify_booking(self):
+        self.api_client.force_authenticate(user=self.user)
+        
+        response = self.api_client.put(
+            f'/api/bookings/{self.booking.id}/modify/',
+            {'seats_booked': 3},
+            format='json'
         )
         
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.booking.refresh_from_db()
+        self.assertEqual(self.booking.seats_booked, 3)
+        
+class APICancelBookingTest(BaseTestcase):
+    def test_cancel_booking(self):
+        self.api_client.force_authenticate(user=self.user)
+        
+        response = self.api_client.post(f'/api/bookings/{self.booking.id}/cancel/')
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.booking.refresh_from_db()
         self.assertEqual(self.booking.payment_status, 'cancelled')
-
-
 # #Testcases for Bus and Booking Models
 # class BusModelTest(TestCase):
 #     def test_bus_model(self):
